@@ -9,7 +9,7 @@ import builtins
 import sys
 import numpy as np
 import pygame
-
+from scipy.ndimage import gaussian_filter
 
 class LifeGame:
     """Class of Conway's Game of Life"""
@@ -19,6 +19,9 @@ class LifeGame:
         self.view_scale = view_scale
         self.world = np.random.randint(2,size =(y_size,x_size))
         self.world_ng = np.zeros((y_size,x_size), dtype=np.int16)
+        # For visual effects
+        self.world_dead1 = np.zeros((y_size,x_size), dtype=np.int16)
+        self.world_dead2 = np.zeros((y_size,x_size), dtype=np.int16)
 
     def reset(self):
         self.world = np.random.randint(2,size =(self.y_size,self.x_size))
@@ -33,18 +36,42 @@ class LifeGame:
                 self.world_ng[active_y, active_x] = 1 if (inhabited==3 and self.world[active_y, active_x]==0) \
                     or (inhabited in range(2,4) and self.world[active_y, active_x] == 1) else 0
 
+        # Optimize code?
+        
+        self.world_dead2 = self.world_dead1.copy()/2
+        self.world_dead1 = (self.world-self.world_ng)/2
+        
+        self.world_dead1[self.world_dead1<0] = 0
+        
+        
         self.world = self.world_ng.copy()
-
-        world_show = self.world_ng[:,:,np.newaxis]
-        world_show = world_show.repeat(self.view_scale, axis=0).repeat(self.view_scale, axis=1).repeat(3, axis=2)*255
+        
+        world_show= self.world_ng + self.world_dead1 + self.world_dead2
+        world_show[world_show>1] = 1
+        
+        
+        world_show = world_show[:,:,np.newaxis].repeat(3, axis = 2)
+        world_show[:,:,0] *= 255 #Red
+        world_show[:,:,1] *= 10 #Green
+        world_show[:,:,2] *= 10 #Blue
+        
+        #world_show = world_show.repeat(self.view_scale, axis=0).repeat(self.view_scale, axis=1).repeat(3, axis=2)*255
+        world_show = gaussian_filter(world_show.repeat(self.view_scale, axis=0).repeat(self.view_scale, axis=1), sigma = 0.7)
+        #gaussian_filter(a, sigma=7)
+        #world_show[:,:,0] *= 96 #Red
+        #world_show[:,:,1] *= 190 #Green
+        #world_show[:,:,2] *= 255 #Blue
+        #print (world_show.shape)
+        
+        
         return np.uint8(world_show).tobytes()
 
 
 if __name__ == '__main__':
 
-    x_s = 256
-    y_s = 128
-    v_scale = 5
+    x_s = 128
+    y_s = 96
+    v_scale = 10
     my_life = LifeGame(x_size = x_s, y_size = y_s, view_scale = v_scale)
 
     pygame.init()
