@@ -27,6 +27,7 @@ class LifeGame:
         self.world = np.random.randint(2,size =(self.y_size,self.x_size))
 
     def step(self):
+
         for active_y in range(self.y_size):
             for active_x in range(self.x_size):
 
@@ -36,34 +37,20 @@ class LifeGame:
                 self.world_ng[active_y, active_x] = 1 if (inhabited==3 and self.world[active_y, active_x]==0) \
                     or (inhabited in range(2,4) and self.world[active_y, active_x] == 1) else 0
 
-        # Optimize code?
-        
-        self.world_dead2 = self.world_dead1.copy()/2
-        self.world_dead1 = (self.world-self.world_ng)/2
-        
+        self.world_dead2 = self.world_dead1.copy()/3
+        self.world_dead1 = (self.world-self.world_ng)/3
         self.world_dead1[self.world_dead1<0] = 0
-        
-        
         self.world = self.world_ng.copy()
-        
+
         world_show= self.world_ng + self.world_dead1 + self.world_dead2
         world_show[world_show>1] = 1
-        
-        
+
         world_show = world_show[:,:,np.newaxis].repeat(3, axis = 2)
-        world_show[:,:,0] *= 255 #Red
-        world_show[:,:,1] *= 10 #Green
-        world_show[:,:,2] *= 10 #Blue
-        
-        #world_show = world_show.repeat(self.view_scale, axis=0).repeat(self.view_scale, axis=1).repeat(3, axis=2)*255
+        world_show[:,:,0] *= 100 #Red
+        world_show[:,:,1] *= 250 #Green
+        world_show[:,:,2] *= 200 #Blue
         world_show = gaussian_filter(world_show.repeat(self.view_scale, axis=0).repeat(self.view_scale, axis=1), sigma = 0.7)
-        #gaussian_filter(a, sigma=7)
-        #world_show[:,:,0] *= 96 #Red
-        #world_show[:,:,1] *= 190 #Green
-        #world_show[:,:,2] *= 255 #Blue
-        #print (world_show.shape)
-        
-        
+
         return np.uint8(world_show).tobytes()
 
 
